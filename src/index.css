@@ -1,0 +1,20 @@
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+body { font-family: Inter, system-ui, Arial, sans-serif; }
+
+.app-root { height: 100%; }
+.leaflet-container { height: 100%; width: 100%; }
+
+/* Category marker styling */
+.category-marker {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	background: #ffffff;
+	border: 2px solid #0b5ea8;
+	box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+	font-size: 18px;
+}
