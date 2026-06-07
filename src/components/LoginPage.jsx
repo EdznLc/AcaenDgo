@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
 import { genders } from '../data/options'
+import ConversationalRegister from './ConversationalRegister'
 
 const API_BASE = import.meta.env.VITE_API_BASE || (import.meta.env.PROD ? '' : 'http://localhost:4000')
 
 export default function LoginPage({ onLogin, initialAction = 'login', prefill = {}, currentSession = null }) {
   const [action, setAction] = useState(initialAction) // 'login' or 'register'
+  const [manualRegister, setManualRegister] = useState(false)
   const [form, setForm] = useState({
     // owner fields only
     telefono: '',
@@ -58,15 +60,19 @@ export default function LoginPage({ onLogin, initialAction = 'login', prefill = 
         return false
       }
       // Fecha nacimiento: no puede ser en el futuro y mínimo 18 años
-      const today = new Date()
+      const today = new Date('2026-06-06') // Referencia de fecha actual: 6 de junio de 2026
       const birthDate = new Date(form.fecha_nacimiento)
       if (birthDate > today) {
-        setError('Fecha de nacimiento no puede ser en el futuro')
+        setError('Fecha de nacimiento no puede ser posterior al 6 de junio de 2026')
         return false
       }
-      const age = today.getFullYear() - birthDate.getFullYear()
+      let age = today.getFullYear() - birthDate.getFullYear()
+      const m = today.getMonth() - birthDate.getMonth()
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--
+      }
       if (age < 18) {
-        setError('Debes tener al menos 18 años')
+        setError('Debes tener al menos 18 años (nacido el 6 de junio de 2008 o antes)')
         return false
       }
       // Género: debe estar seleccionado
@@ -153,67 +159,110 @@ export default function LoginPage({ onLogin, initialAction = 'login', prefill = 
         <button type="button" onClick={() => setAction('register')} style={{ padding: '0.5rem 0.75rem', background: action === 'register' ? '#f59e0b' : '#e2e8f0', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Register</button>
       </div>
 
-      <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.75rem', background: '#ffffffcc', padding: '1rem', borderRadius: '12px', boxShadow: '0 10px 20px rgba(0,0,0,0.08)' }}>
-        {action === 'login' && (
-          <>
-            <label>
-              Teléfono
-              <input name="telefono" value={form.telefono} onChange={handleChange} placeholder="8711234567" maxLength="10" required style={{ width: '100%', padding: '0.75rem', marginTop: '0.25rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
-              <small style={{ color: '#64748b', fontSize: '0.875rem' }}>10 dígitos</small>
-            </label>
-            <label>
-              Contraseña
-              <input type="password" name="contrsena" value={form.contrsena} onChange={handleChange} placeholder="Mínimo 6 caracteres" required style={{ width: '100%', padding: '0.75rem', marginTop: '0.25rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
-            </label>
-          </>
-        )}
+      {action === 'register' && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', padding: '0.5rem 0.75rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+          <span style={{ fontSize: '0.85rem', color: '#475569', fontWeight: 600 }}>Tipo de registro:</span>
+          <button
+            type="button"
+            onClick={() => setManualRegister(!manualRegister)}
+            style={{
+              padding: '0.35rem 0.60rem',
+              background: '#0284c7',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: '0.8rem',
+              fontWeight: 'bold',
+              cursor: 'pointer'
+            }}
+          >
+            {manualRegister ? '💬 Usar registro por Chat' : '📝 Usar formulario manual'}
+          </button>
+        </div>
+      )}
 
-        {action === 'register' && (
-          <>
-            <label>
-              Nombre
-              <input name="nombre" value={form.nombre} onChange={handleChange} placeholder="Nombre" required style={{ width: '100%', padding: '0.75rem', marginTop: '0.25rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
-            </label>
-            <label>
-              Apellido paterno
-              <input name="apellido_paterno" value={form.apellido_paterno} onChange={handleChange} placeholder="Apellido paterno" required style={{ width: '100%', padding: '0.75rem', marginTop: '0.25rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
-            </label>
-            <label>
-              Apellido materno (opcional)
-              <input name="apellido_materno" value={form.apellido_materno} onChange={handleChange} placeholder="Apellido materno" style={{ width: '100%', padding: '0.75rem', marginTop: '0.25rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
-            </label>
-            <label>
-              Fecha de nacimiento
-              <input type="date" name="fecha_nacimiento" value={form.fecha_nacimiento} onChange={handleChange} required style={{ width: '100%', padding: '0.5rem', marginTop: '0.25rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
-              <small style={{ color: '#64748b', fontSize: '0.875rem' }}>Mínimo 18 años</small>
-            </label>
-            <label>
-              Género
-              <select name="genero" value={form.genero} onChange={handleChange} required style={{ width: '100%', padding: '0.6rem', marginTop: '0.25rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
-                <option value="">Selecciona...</option>
-                {genders.map((g) => (
-                  <option key={g.value} value={g.value}>{g.label}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Teléfono
-              <input name="telefono" value={form.telefono} onChange={handleChange} placeholder="8711234567" maxLength="10" required style={{ width: '100%', padding: '0.75rem', marginTop: '0.25rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
-              <small style={{ color: '#64748b', fontSize: '0.875rem' }}>10 dígitos</small>
-            </label>
-            <label>
-              Contraseña
-              <input type="password" name="contrsena" value={form.contrsena} onChange={handleChange} placeholder="Mínimo 6 caracteres" required style={{ width: '100%', padding: '0.75rem', marginTop: '0.25rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
-            </label>
-          </>
-        )}
+      {action === 'register' && !manualRegister ? (
+        <ConversationalRegister
+          onRegisterSuccess={onLogin}
+          onConversationalComplete={(data) => {
+            // Prellenar el formulario de registro manual con los datos de la IA
+            setForm((prev) => ({
+              ...prev,
+              nombre: data.nombre || '',
+              apellido_paterno: data.apellido_paterno || '',
+              apellido_materno: data.apellido_materno === 'No proporcionado' ? '' : (data.apellido_materno || ''),
+              fecha_nacimiento: data.fecha_nacimiento || '',
+              genero: data.genero || '',
+              telefono: data.telefono || '',
+              contrsena: data.contrsena || ''
+            }))
+            // Cambiar la vista a manual para que el usuario confirme
+            setManualRegister(true)
+          }}
+        />
+      ) : (
+        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.75rem', background: '#ffffffcc', padding: '1rem', borderRadius: '12px', boxShadow: '0 10px 20px rgba(0,0,0,0.08)' }}>
+          {action === 'login' && (
+            <>
+              <label>
+                Teléfono
+                <input name="telefono" value={form.telefono} onChange={handleChange} placeholder="8711234567" maxLength="10" required style={{ width: '100%', padding: '0.75rem', marginTop: '0.25rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                <small style={{ color: '#64748b', fontSize: '0.875rem' }}>10 dígitos</small>
+              </label>
+              <label>
+                Contraseña
+                <input type="password" name="contrsena" value={form.contrsena} onChange={handleChange} placeholder="Mínimo 6 caracteres" required style={{ width: '100%', padding: '0.75rem', marginTop: '0.25rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+              </label>
+            </>
+          )}
 
-        {error && <div style={{ color: '#b91c1c', fontWeight: 600 }}>{error}</div>}
+          {action === 'register' && (
+            <>
+              <label>
+                Nombre
+                <input name="nombre" value={form.nombre} onChange={handleChange} placeholder="Nombre" required style={{ width: '100%', padding: '0.75rem', marginTop: '0.25rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+              </label>
+              <label>
+                Apellido paterno
+                <input name="apellido_paterno" value={form.apellido_paterno} onChange={handleChange} placeholder="Apellido paterno" required style={{ width: '100%', padding: '0.75rem', marginTop: '0.25rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+              </label>
+              <label>
+                Apellido materno (opcional)
+                <input name="apellido_materno" value={form.apellido_materno} onChange={handleChange} placeholder="Apellido materno" style={{ width: '100%', padding: '0.75rem', marginTop: '0.25rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+              </label>
+              <label>
+                Fecha de nacimiento
+                <input type="date" name="fecha_nacimiento" value={form.fecha_nacimiento} onChange={handleChange} required style={{ width: '100%', padding: '0.5rem', marginTop: '0.25rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                <small style={{ color: '#64748b', fontSize: '0.875rem' }}>Mínimo 18 años</small>
+              </label>
+              <label>
+                Género
+                <select name="genero" value={form.genero} onChange={handleChange} required style={{ width: '100%', padding: '0.6rem', marginTop: '0.25rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+                  <option value="">Selecciona...</option>
+                  {genders.map((g) => (
+                    <option key={g.value} value={g.value}>{g.label}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Teléfono
+                <input name="telefono" value={form.telefono} onChange={handleChange} placeholder="8711234567" maxLength="10" required style={{ width: '100%', padding: '0.75rem', marginTop: '0.25rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                <small style={{ color: '#64748b', fontSize: '0.875rem' }}>10 dígitos</small>
+              </label>
+              <label>
+                Contraseña
+                <input type="password" name="contrsena" value={form.contrsena} onChange={handleChange} placeholder="Mínimo 6 caracteres" required style={{ width: '100%', padding: '0.75rem', marginTop: '0.25rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+              </label>
+            </>
+          )}
 
-        <button type="submit" disabled={loading} style={{ padding: '0.9rem', background: '#00529b', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
-          {loading ? 'Conectando...' : (action === 'register' ? 'Registrar' : 'Ingresar')}
-        </button>
-      </form>
+          {error && <div style={{ color: '#b91c1c', fontWeight: 600 }}>{error}</div>}
+
+          <button type="submit" disabled={loading} style={{ padding: '0.9rem', background: '#00529b', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+            {loading ? 'Conectando...' : (action === 'register' ? 'Registrar' : 'Ingresar')}
+          </button>
+        </form>
+      ) }
 
       <div style={{ padding: '0.75rem', background: '#f8fafc', borderRadius: '12px', color: '#475569' }}>
         <p style={{ margin: 0, fontWeight: 600 }}>Acceso para dueños</p>

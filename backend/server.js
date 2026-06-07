@@ -6,6 +6,9 @@ import { fileURLToPath } from 'url'
 import ownersRoutes from './routes/owners.js'
 import comerciosRoutes from './routes/comercios.js'
 import authRoutes from './routes/auth.js'
+import registroDuenosRoutes from './routes/registro_dueños.js'
+import registroComerciosRoutes from './routes/registro_comercios.js'
+import recomendacionesRoutes from './routes/recomendaciones.js'
 
 dotenv.config()
 
@@ -23,6 +26,9 @@ app.use(express.json())
 app.use('/api/owners', ownersRoutes)
 app.use('/api/comercios', comerciosRoutes)
 app.use('/api/auth', authRoutes)
+app.use('/api/registro-duenos', registroDuenosRoutes)
+app.use('/api/registro-comercios', registroComerciosRoutes)
+app.use('/api/recomendaciones', recomendacionesRoutes)
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' })

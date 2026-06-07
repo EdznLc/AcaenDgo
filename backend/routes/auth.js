@@ -72,7 +72,7 @@ router.post('/register-owner', async (req, res) => {
 // Register commerce
 router.post('/register-commerce', async (req, res) => {
   try {
-    const { nombre, id_usuario, categoria, codigo_postal, longitud, latitud, hora_inicial, hora_final } = req.body
+    const { nombre, id_usuario, categoria, codigo_postal, longitud, latitud, hora_inicial, hora_final, descripcion } = req.body
     if (!nombre || !id_usuario || !longitud || !latitud) {
       return res.status(400).json({ error: 'Faltan campos requeridos para registro de comercio' })
     }
@@ -80,10 +80,18 @@ router.post('/register-commerce', async (req, res) => {
     const [owner] = await pool.query('SELECT id_usuario FROM `dueños` WHERE id_usuario = ?', [id_usuario])
     if (owner.length === 0) return res.status(404).json({ error: 'Dueño no encontrado' })
 
+    // Limitar a un máximo de 5 negocios por dueño
+    const [countRows] = await pool.query('SELECT COUNT(*) AS total FROM `comercios` WHERE id_usuario = ?', [id_usuario])
+    const currentCount = countRows[0].total
+    const MAX_LIMIT = 5
+    if (currentCount >= MAX_LIMIT) {
+      return res.status(403).json({ error: `Límite alcanzado: Cada dueño puede registrar un máximo de ${MAX_LIMIT} negocios.` })
+    }
+
     const [result] = await pool.query(
-      `INSERT INTO \`comercios\` (nombre, id_usuario, categoria, codigo_postal, longitud, latitud, hora_inicial, hora_final)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [nombre, id_usuario, categoria || null, codigo_postal || null, longitud, latitud, hora_inicial || null, hora_final || null]
+      `INSERT INTO \`comercios\` (nombre, id_usuario, categoria, codigo_postal, longitud, latitud, hora_inicial, hora_final, descripcion)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [nombre, id_usuario, categoria || null, codigo_postal || null, longitud, latitud, hora_inicial || null, hora_final || null, descripcion || null]
     )
 
     res.status(201).json({ message: 'Comercio registrado', id_comercio: result.insertId })

@@ -1,12 +1,11 @@
 export const categories = [
   { value: '1', label: 'Cafetería' },
   { value: '2', label: 'Panadería' },
-  { value: '3', label: 'Tienda' },
-  { value: '4', label: 'Restaurante' },
-  { value: '5', label: 'Servicios' },
-  { value: '6', label: 'Salud' },
-  { value: '7', label: 'Educación' },
-  { value: '8', label: 'Otro' },
+  { value: '3', label: 'Restaurante' },
+  { value: '4', label: 'Tienda' },
+  { value: '5', label: 'Educación' },
+  { value: '6', label: 'Servicios' },
+  { value: '7', label: 'Otro' },
 ]
 
 export const genders = [
