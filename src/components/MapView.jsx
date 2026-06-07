@@ -129,6 +129,10 @@ export default function MapView({ session, mapRefreshKey }) {
   const categoryIcons = {
     '1': '/icons/cafe.png',
     '2': '/icons/pan.png',
+    '3': '/icons/restaurante.png',
+    '4': '/icons/tienda.png',
+    '5': '/icons/educacion.png',
+    '6': '/icons/servicios.png',
     '7': '/icons/otro.png',
   }
 
@@ -208,6 +212,83 @@ export default function MapView({ session, mapRefreshKey }) {
   const handleCloseDetail = () => {
     setSelectedComercio(null)
     setRouteCoords(null)
+  }
+
+  // Seleccionar comercio desde el chatbot (recentrar mapa y abrir detalle)
+  const handleSelectCommerceFromChat = (commerceId) => {
+    const found = comercios.find((c) => Number(c.id) === Number(commerceId))
+    if (found) {
+      setSelectedComercio(found)
+      setMapCenter([found.lat, found.lng])
+      setRouteCoords(null) // Limpiar ruta anterior
+    } else {
+      console.warn(`Comercio con ID ${commerceId} no encontrado en la lista local.`)
+    }
+  }
+
+  // Parsear texto del chat para convertir [Texto](commerce:ID) en botones interactivos
+  const renderMessageContent = (content, isUser) => {
+    if (isUser) return content
+    if (!content) return ''
+
+    const regex = /\[([^\]]+)\]\(commerce:(\d+)\)/g
+    const parts = []
+    let lastIndex = 0
+    let match
+
+    while ((match = regex.exec(content)) !== null) {
+      const matchIndex = match.index
+      // Añadir texto previo al match
+      if (matchIndex > lastIndex) {
+        parts.push(content.substring(lastIndex, matchIndex))
+      }
+
+      const buttonText = match[1]
+      const commerceId = match[2]
+
+      parts.push(
+        <button
+          key={matchIndex}
+          onClick={() => handleSelectCommerceFromChat(commerceId)}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.25rem',
+            background: '#eff6ff',
+            color: '#2563eb',
+            border: '1px solid #bfdbfe',
+            borderRadius: '6px',
+            padding: '2px 8px',
+            margin: '2px 4px',
+            fontSize: '0.8rem',
+            fontWeight: '600',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            verticalAlign: 'middle',
+            boxShadow: '0 1px 2px rgba(37, 99, 235, 0.05)',
+            fontFamily: 'inherit'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#dbeafe'
+            e.currentTarget.style.borderColor = '#93c5fd'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = '#eff6ff'
+            e.currentTarget.style.borderColor = '#bfdbfe'
+          }}
+        >
+          📍 {buttonText}
+        </button>
+      )
+
+      lastIndex = regex.lastIndex
+    }
+
+    if (lastIndex < content.length) {
+      parts.push(content.substring(lastIndex))
+    }
+
+    return parts.length > 0 ? parts : content
   }
 
   // Trazar ruta usando API de OSRM
@@ -672,7 +753,7 @@ export default function MapView({ session, mapRefreshKey }) {
                     whiteSpace: 'pre-line'
                   }}
                 >
-                  {m.content}
+                  {renderMessageContent(m.content, isUser)}
                 </div>
               )
             })}

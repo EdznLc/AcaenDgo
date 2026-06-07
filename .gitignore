@@ -10,9 +10,7 @@ dist-ssr/
 # Environment variables
 .env
 backend/.env
-backend/.env.example
 frontend/.env
-frontend/.env.example
 
 # Editor settings and IDE folders
 .vscode/

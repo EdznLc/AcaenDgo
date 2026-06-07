@@ -17,7 +17,7 @@ router.post('/', async (req, res) => {
 
   try {
     // 1. Obtener hasta 150 comercios reales para alimentar la base de conocimientos de Gemini
-    const [rows] = await pool.query('SELECT nombre, categoria, codigo_postal, descripcion FROM `comercios` LIMIT 150')
+    const [rows] = await pool.query('SELECT id_comercio, nombre, categoria, codigo_postal, descripcion FROM `comercios` LIMIT 150')
     
     const catLabels = {
       '1': 'Cafetería',
@@ -31,7 +31,7 @@ router.post('/', async (req, res) => {
 
     const businessList = rows.map(r => {
       const catLabel = catLabels[r.categoria] || 'Otro'
-      return `- Nombre: "${r.nombre}", Categoría: "${catLabel}", C.P.: "${r.codigo_postal}", Descripción: "${r.descripcion || 'Sin descripción'}"`
+      return `- ID: ${r.id_comercio}, Nombre: "${r.nombre}", Categoría: "${catLabel}", C.P.: "${r.codigo_postal}", Descripción: "${r.descripcion || 'Sin descripción'}"`
     }).join('\n')
 
     const SYSTEM_INSTRUCTION = `
@@ -45,6 +45,9 @@ REGLAS DE RECOMENDACIÓN CRÍTICAS:
 1. Analiza con cuidado qué está pidiendo el usuario. Si el usuario te pide una recomendación sobre un tema específico (por ejemplo: aprender matemáticas, regularización de materias, comprar pan, reparar un carro, servicios de plomería, estudiar inglés, etc.), debes buscar de manera meticulosa en la lista de comercios de arriba aquellos negocios que coincidan directamente (por ejemplo, escuelas en la categoría "Educación", panaderías en "Panadería", talleres en "Servicios", o cualquier negocio que tenga palabras relacionadas en su nombre o descripción como "matemáticas", "regularización", "aprender", etc.).
 2. Si existe un comercio en la lista que satisfaga exactamente la necesidad del usuario, es OBLIGATORIO que lo recomiendes prioritariamente por su Nombre, Categoría y Descripción, explicándole que es un negocio real local registrado en nuestra plataforma.
 3. Si el usuario te pide recomendaciones de turismo general (ej. Paseo del Viejo Oeste, la Catedral de Durango, el Teleférico, etc.), cuéntale datos interesantes del lugar y sugiérele negocios de nuestra lista (cafeterías, restaurantes, panaderías) para ir a desayunar, comer o pasar el rato cerca de esa zona.
+4. Cuando recomiendes o menciones un negocio de la lista de arriba en tu respuesta, es OBLIGATORIO que agregues un enlace especial con formato de Markdown: [Ver en mapa: Nombre del Negocio](commerce:ID)
+   Ejemplo: "¡Claro que sí, pariente! Te recomiendo echarle un ojo a [Ver en mapa: Escuela de Matematicas](commerce:12) que te va a servir mucho."
+   El ID en la URL debe ser exactamente el ID numérico que tiene ese negocio en la lista anterior. No inventes IDs que no estén en la lista.
 `
 
     // Formatear historial para el SDK
